@@ -50,40 +50,36 @@
   renderMachineOptions();
   const machineId=$('ucMachine').value||machines[0]?.id;
   $('ucMachine').value=machineId||'';
-  const currentProduct=$('ucProduct').value;
   const compatible=products.filter(p=>p.category==='MATERIAL_RODANTE'&&(!machineId||p.machines.includes(machineId)));
-  const options=compatible.length?compatible:products.filter(p=>p.category==='MATERIAL_RODANTE');
-  $('ucProduct').innerHTML=options.map(p=>'<option value="'+esc(p.id)+'">'+esc(productLabel(p))+'</option>').join('');
-  if(options.some(p=>p.id===currentProduct))$('ucProduct').value=currentProduct;
+  $('ucComponentsBody').innerHTML=compatible.length?compatible.map(p=>'<tr data-product-id="'+esc(p.id)+'"><td><b>'+esc(p.description)+'</b><small>'+esc(p.pn)+'</small></td><td>'+p.newMeasure+' mm</td><td>'+p.discardMeasure+' mm</td><td><input aria-label="Medida encontrada '+esc(p.description)+'" id="ucMeasure_'+esc(p.id)+'" type="number" min="0" step="0.01" placeholder="Medida (mm)"></td><td><select aria-label="Condição visual '+esc(p.description)+'" id="ucCondition_'+esc(p.id)+'"><option>Normal</option><option>Desgaste irregular</option><option>Trinca / dano</option><option>Folga / componente solto</option><option>Substituição recomendada</option></select></td><td id="ucLife_'+esc(p.id)+'">—</td></tr>').join(''):'<tr><td colspan="6" class="empty">Não há componentes de material rodante vinculados a esta máquina. Cadastre ou vincule os PN na aba Máquinas e peças.</td></tr>';
   if(!$('ucDate').value)$('ucDate').value=new Date().toISOString().slice(0,10);
   updateUndercarriageCalc();
  }
  function updateUndercarriageCalc(){
-  const p=products.find(x=>x.id===$('ucProduct').value);
-  const m=machines.find(x=>x.id===$('ucMachine').value);
-  if(!p){$('ucLife').textContent='—';$('ucWear').textContent='—';$('ucForecast').textContent='—';$('ucGenerateOrder').hidden=true;return;}
-  const current=+$('ucCurrent').value;
-  const calc=$('ucCurrent').value!==''?lifeCalc(p,current):null;
-  const previous=inspections.filter(i=>i.machineId===m?.id&&i.productId===p.id).sort((a,b)=>b.hours-a.hours)[0];
-  let forecast='Sem histórico suficiente';
-  if(calc&&previous&&+$('ucHours').value>previous.hours&&previous.current>current){
-   const rate=(previous.current-current)/(+$('ucHours').value-previous.hours);
-   if(rate>0)forecast=Math.ceil(Math.max(0,(current-p.discardMeasure)/rate)).toLocaleString('pt-BR')+' h de operação';
-  }
-  $('ucLife').textContent=calc?Math.round(calc.life)+'%':'—';
-  $('ucWear').textContent=calc?Math.round(calc.wear)+'%':'—';
-  $('ucForecast').textContent=calc?forecast:'—';
-  const point=reorderPoint(p),critical=!!calc&&(calc.life<=10||/trinca|solto/i.test($('ucCondition').value));
-  const stockLow=p.stock<=point;
-  $('ucStock').textContent=p.stock+' un.';
-  $('ucReorder').textContent=point+' un.';
-  $('ucLead').textContent=p.leadTime+' dias';
-  $('ucStockAdvice').textContent=stockLow?'Estoque no ponto de pedido ou abaixo dele. Reposição precisa ser avaliada.':'Estoque acima do ponto de pedido estimado.';
-  $('ucAlert').hidden=!(critical||stockLow);
-  $('ucAlert').innerHTML=critical?'<b>Componente crítico.</b> A vida útil estimada está em nível crítico ou foi indicada uma condição visual de risco. Avalie a troca conforme procedimento técnico.':stockLow?'<b>Reposição recomendada.</b> O estoque atingiu o ponto de pedido calculado pelo consumo e prazo de fornecimento.':'';
-  $('ucGenerateOrder').hidden=!(critical||stockLow);
-  $('ucOrderReason').textContent=critical?'Pedido habilitado por criticidade da inspeção.':stockLow?'Pedido habilitado por ponto de reposição do estoque.':'O pedido será habilitado quando a inspeção indicar criticidade ou o estoque atingir o ponto de pedido.';
-  pendingOrder=(critical||stockLow)?{productId:p.id,machineId:m?.id,reason:critical?'Inspeção crítica':'Ponto de pedido de estoque'}:null;
+  const machineId=$('ucMachine').value,m=machines.find(x=>x.id===machineId);
+  let filled=0,attention=0,criticalProduct=null,forecastCount=0,stockAlert=false;
+  const compatible=products.filter(p=>p.category==='MATERIAL_RODANTE'&&(!machineId||p.machines.includes(machineId)));
+  compatible.forEach(p=>{
+   const input=$('ucMeasure_'+p.id),condition=$('ucCondition_'+p.id),cell=$('ucLife_'+p.id);
+   if(!input||!cell)return;
+   const raw=input.value,current=+raw,calc=raw!==''?lifeCalc(p,current):null;
+   cell.textContent=calc?Math.round(calc.life)+'%':'—';
+   const previous=inspections.filter(i=>i.machineId===m?.id&&i.productId===p.id).sort((a,b)=>b.hours-a.hours)[0];
+   if(calc){filled++;const isCritical=calc.life<=10||/trinca|solto|substituição/i.test(condition?.value||'');if(isCritical||calc.life<=25){attention++;if(!criticalProduct)criticalProduct=p;}
+    if(previous&&+$('ucHours').value>previous.hours&&previous.current>current){const rate=(previous.current-current)/(+$('ucHours').value-previous.hours);if(rate>0)forecastCount++;}
+   }
+   if(p.stock<=reorderPoint(p))stockAlert=true;
+  });
+  $('ucLife').textContent=filled+' / '+compatible.length;
+  $('ucWear').textContent=attention;
+  $('ucForecast').textContent=forecastCount?'Estimativa disponível para '+forecastCount+' item(ns)':'Aguardando histórico';
+  const lowStock=compatible.find(p=>p.stock<=reorderPoint(p));
+  const alertProduct=criticalProduct||lowStock;
+  $('ucAlert').hidden=!(attention||lowStock);
+  $('ucAlert').textContent=attention?'Atenção: há componentes com vida estimada baixa ou condição visual que exige avaliação técnica.':lowStock?'Há componente com estoque no ponto de pedido ou abaixo dele. Avalie a reposição.':'';
+  $('ucGenerateOrder').hidden=!(criticalProduct||lowStock);
+  $('ucOrderReason').textContent=criticalProduct?'Pedido habilitado por componente crítico; revise a recomendação antes de encaminhar.':lowStock?'Pedido habilitado por ponto de reposição de estoque.':'Os alertas são estimativas; valide os limites pelo manual específico da máquina e do componente.';
+  pendingOrder=alertProduct?{productId:alertProduct.id,machineId,reason:criticalProduct?'Inspeção de conjunto com item crítico':'Ponto de pedido de estoque'}:null;
  }
  $('machineForm').addEventListener('submit',e=>{
   e.preventDefault();const code=$('machineCode').value.trim().toUpperCase();
@@ -100,15 +96,22 @@
  });
  $('productSearch').addEventListener('input',renderCatalog);
  $('ucMachine').addEventListener('change',prepareUndercarriage);
- ['ucProduct','ucCurrent','ucHours','ucCondition'].forEach(id=>$(id).addEventListener('input',updateUndercarriageCalc));
- $('ucProduct').addEventListener('change',updateUndercarriageCalc);
- $('ucCurrent').addEventListener('input',updateUndercarriageCalc);
+ $('ucComponentsBody').addEventListener('input',updateUndercarriageCalc);
+ $('ucComponentsBody').addEventListener('change',updateUndercarriageCalc);
+ $('ucHours').addEventListener('input',updateUndercarriageCalc);
+ $('ucClearMeasures').addEventListener('click',()=>{document.querySelectorAll('#ucComponentsBody input[type="number"]').forEach(el=>el.value='');document.querySelectorAll('#ucComponentsBody select').forEach(el=>el.value='Normal');updateUndercarriageCalc();});
  $('undercarriageForm').addEventListener('submit',e=>{
-  e.preventDefault();const p=products.find(x=>x.id===$('ucProduct').value),m=machines.find(x=>x.id===$('ucMachine').value),current=+$('ucCurrent').value,hours=+$('ucHours').value;
-  if(!p||!m)return;const calc=lifeCalc(p,current);if(!calc){notifyLocal('Confira as medidas cadastradas do componente.');return;}
-  if(inspections.some(i=>i.machineId===m.id&&i.productId===p.id&&hours<i.hours)){notifyLocal('O horímetro informado é menor que o de uma inspeção anterior. Confira o valor.');return;}
-  inspections.unshift({id:'i'+Date.now(),date:$('ucDate').value,machineId:m.id,productId:p.id,hours,current,life:calc.life,wear:calc.wear,condition:$('ucCondition').value,notes:$('ucNotes').value});
-  m.hours=Math.max(m.hours,hours);updateUndercarriageCalc();renderUndercarriageHistory();notifyLocal('Inspeção salva no histórico desta sessão.');
+  e.preventDefault();const m=machines.find(x=>x.id===$('ucMachine').value),hours=+$('ucHours').value,date=$('ucDate').value;
+  if(!m){notifyLocal('Selecione uma máquina.');return;}
+  const compatible=products.filter(p=>p.category==='MATERIAL_RODANTE'&&p.machines.includes(m.id));
+  const measured=compatible.filter(p=>$('ucMeasure_'+p.id)&&$('ucMeasure_'+p.id).value!=='');
+  if(!measured.length){notifyLocal('Informe pelo menos uma medida antes de salvar a inspeção.');return;}
+  if(!date||!Number.isFinite(hours)||hours<0){notifyLocal('Informe data e horímetro válidos.');return;}
+  const invalid=measured.find(p=>!lifeCalc(p,+$('ucMeasure_'+p.id).value));
+  if(invalid){notifyLocal('Confira a medida do componente '+invalid.pn+'.');return;}
+  if(measured.some(p=>inspections.some(i=>i.machineId===m.id&&i.productId===p.id&&hours<i.hours))){notifyLocal('O horímetro informado é menor que uma inspeção anterior de um dos componentes. Confira o valor.');return;}
+  measured.forEach(p=>{const current=+$('ucMeasure_'+p.id).value,calc=lifeCalc(p,current);inspections.unshift({id:'i'+Date.now()+'-'+p.id,date,machineId:m.id,productId:p.id,hours,current,life:calc.life,wear:calc.wear,condition:$('ucCondition_'+p.id).value,notes:$('ucNotes').value,inspectionGroup:date+'-'+m.id+'-'+hours});});
+  m.hours=Math.max(m.hours,hours);renderUndercarriageHistory();updateUndercarriageCalc();notifyLocal('Inspeção completa salva: '+measured.length+' componente(s) registrados juntos nesta sessão.');
  });
  $('ucGenerateOrder').addEventListener('click',()=>{
   if(!pendingOrder)return;const p=products.find(x=>x.id===pendingOrder.productId);if(!p)return;
