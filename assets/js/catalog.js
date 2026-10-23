@@ -50,6 +50,8 @@
   renderMachineOptions();
   const machineId=$('ucMachine').value||machines[0]?.id;
   $('ucMachine').value=machineId||'';
+  const selectedMachine=machines.find(x=>x.id===machineId);
+  if($('ucModel'))$('ucModel').value=selectedMachine?.model||'Modelo não informado no cadastro';
   const compatible=products.filter(p=>p.category==='MATERIAL_RODANTE'&&(!machineId||p.machines.includes(machineId)));
   $('ucComponentsBody').innerHTML=compatible.length?compatible.map(p=>'<tr data-product-id="'+esc(p.id)+'"><td><b>'+esc(p.description)+'</b><small>'+esc(p.pn)+'</small></td><td>'+p.newMeasure+' mm</td><td>'+p.discardMeasure+' mm</td><td><input aria-label="Medida encontrada '+esc(p.description)+'" id="ucMeasure_'+esc(p.id)+'" type="number" min="0" step="0.01" placeholder="Medida (mm)"></td><td><select aria-label="Condição visual '+esc(p.description)+'" id="ucCondition_'+esc(p.id)+'"><option>Normal</option><option>Desgaste irregular</option><option>Trinca / dano</option><option>Folga / componente solto</option><option>Substituição recomendada</option></select></td><td id="ucLife_'+esc(p.id)+'">—</td></tr>').join(''):'<tr><td colspan="6" class="empty">Não há componentes de material rodante vinculados a esta máquina. Cadastre ou vincule os PN na aba Máquinas e peças.</td></tr>';
   if(!$('ucDate').value)$('ucDate').value=new Date().toISOString().slice(0,10);
