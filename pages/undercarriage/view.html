@@ -1,0 +1,33 @@
+<section id="undercarriage" class="page">
+  <div class="module-hero">
+    <div><span class="eyebrow">INSPEÇÃO DE CAMPO</span><h2>Material rodante</h2><p>Registre medidas de esteiras, roletes, rodas-guia e rodas motrizes com cálculo automático de desgaste.</p></div>
+    <span class="tag orange">VALIDAR COM MANUAL</span>
+  </div>
+  <div class="notice" style="margin-top:0"><b>Referência técnica obrigatória.</b> Use as medidas de peça nova e de descarte do manual específico da máquina e do componente. Fórmulas e previsões abaixo são estimativas de apoio, não substituem critérios do fabricante.</div>
+  <div class="content-grid catalog-grid">
+    <div class="panel">
+      <div class="panel-title"><div><h3>Nova inspeção</h3><p>Preencha apenas os dados necessários em campo</p></div><span class="tag">NOVO REGISTRO</span></div>
+      <form id="undercarriageForm" class="compact-form">
+        <div class="field"><label for="ucMachine">Máquina / frota *</label><select id="ucMachine" required></select></div>
+        <div class="field"><label for="ucProduct">Componente / PN *</label><select id="ucProduct" required></select></div>
+        <div class="form-grid"><div class="field"><label for="ucDate">Data *</label><input id="ucDate" type="date" required></div><div class="field"><label for="ucHours">Horímetro (h) *</label><input id="ucHours" type="number" min="0" step="0.1" required placeholder="Horímetro atual"></div></div>
+        <div class="form-grid"><div class="field"><label for="ucCurrent">Medida aferida (mm) *</label><input id="ucCurrent" type="number" min="0" step="0.01" required placeholder="Medida atual"></div><div class="field"><label for="ucCondition">Condição visual</label><select id="ucCondition"><option>Normal</option><option>Desgaste irregular</option><option>Trinca / dano</option><option>Folga / componente solto</option></select></div></div>
+        <div class="field"><label for="ucNotes">Observações</label><input id="ucNotes" placeholder="Opcional — lado, posição ou observação"></div>
+        <div class="wear-summary">
+          <div><small>Vida útil estimada restante</small><strong id="ucLife">—</strong></div>
+          <div><small>Desgaste acumulado</small><strong id="ucWear">—</strong></div>
+          <div><small>Previsão até descarte</small><strong id="ucForecast">—</strong></div>
+        </div>
+        <div id="ucAlert" class="notice" hidden></div>
+        <div class="form-actions"><button class="button primary" type="submit">Salvar inspeção</button><button class="button light" id="ucGenerateOrder" type="button" hidden>Gerar pedido de compra</button></div>
+        <small id="ucOrderReason" class="help-text">O botão de pedido aparece quando o componente está crítico ou o estoque atinge o ponto de reposição.</small>
+      </form>
+    </div>
+    <div class="panel">
+      <div class="panel-title"><div><h3>Últimas inspeções</h3><p>Histórico local desta sessão</p></div></div>
+      <div class="table-wrap"><table><thead><tr><th>Data</th><th>Máquina / componente</th><th>Medida</th><th>Vida restante</th><th>Horímetro</th></tr></thead><tbody id="ucHistoryTable"></tbody></table></div>
+      <div class="panel-subhead"><h3>Reposição recomendada</h3><p id="ucStockAdvice">Selecione um componente para consultar o ponto de pedido.</p></div>
+      <div class="stock-quick-grid"><div><small>Estoque atual</small><strong id="ucStock">—</strong></div><div><small>Ponto de pedido</small><strong id="ucReorder">—</strong></div><div><small>Prazo fornecedor</small><strong id="ucLead">—</strong></div></div>
+    </div>
+  </div>
+</section>
