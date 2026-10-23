@@ -30,7 +30,7 @@
  function recommendedQty(p){return Math.max(0,Math.ceil((+p.monthlyUse||0)*(Math.max(1,(+p.leadTime||0)+(+p.safetyDays||0))/30)+Math.ceil((+p.monthlyUse||0)/30*(+p.safetyDays||0))-(+p.stock||0)));}
  function setCatalogTab(name){activeCatalog=name;document.querySelectorAll('[data-catalog-tab]').forEach(b=>b.classList.toggle('active',b.dataset.catalogTab===name));document.querySelectorAll('.catalog-pane').forEach(p=>p.classList.toggle('active',p.id==='catalog-'+name));}
  document.querySelectorAll('[data-catalog-tab]').forEach(b=>b.addEventListener('click',()=>setCatalogTab(b.dataset.catalogTab)));
- function renderMachineOptions(){const options=machines.map(m=>'<option value="'+esc(m.id)+'">'+esc(machineName(m.id))+'</option>').join('');$('productMachines').innerHTML=options;$('ucMachine').innerHTML=options;}
+ function renderMachineOptions(){const selectedMachine=$('ucMachine')?.value;const options=machines.map(m=>'<option value="'+esc(m.id)+'">'+esc(machineName(m.id))+'</option>').join('');$('productMachines').innerHTML=options;$('ucMachine').innerHTML=options;if(machines.some(m=>m.id===selectedMachine))$('ucMachine').value=selectedMachine;}
  function renderCatalog(){
   renderMachineOptions();
   $('machineSummary').textContent=machines.length+' máquinas cadastradas';
