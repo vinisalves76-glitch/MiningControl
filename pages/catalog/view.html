@@ -1,0 +1,53 @@
+<section id="catalog" class="page">
+  <div class="module-hero">
+    <div><span class="eyebrow">CADASTRO CENTRAL</span><h2>Máquinas e produtos</h2><p>Cadastre ativos, vincule peças e mantenha as referências técnicas em um único lugar.</p></div>
+    <span class="tag">MÓDULO INICIAL</span>
+  </div>
+  <div class="catalog-tabs" role="tablist" aria-label="Cadastro">
+    <button type="button" class="catalog-tab active" data-catalog-tab="machines">Máquinas</button>
+    <button type="button" class="catalog-tab" data-catalog-tab="products">Produtos / peças</button>
+    <button type="button" class="catalog-tab" data-catalog-tab="orders">Pedidos de compra <span id="orderCount" class="mini-count">0</span></button>
+  </div>
+  <div id="catalog-machines" class="catalog-pane active">
+    <div class="content-grid catalog-grid">
+      <div class="panel">
+        <div class="panel-title"><div><h3>Cadastrar máquina</h3><p>Identificação rápida da frota</p></div></div>
+        <form id="machineForm" class="compact-form">
+          <div class="field"><label for="machineCode">Código da frota *</label><input id="machineCode" required placeholder="Ex.: EX-07"></div>
+          <div class="field"><label for="machineName">Nome / tipo *</label><input id="machineName" required placeholder="Ex.: Escavadeira hidráulica"></div>
+          <div class="form-grid"><div class="field"><label for="machineModel">Modelo</label><input id="machineModel" placeholder="Ex.: SY750H"></div><div class="field"><label for="machineSerial">Nº de série</label><input id="machineSerial" placeholder="Número de série"></div></div>
+          <div class="field"><label for="machineHours">Horímetro atual (h)</label><input id="machineHours" type="number" min="0" step="0.1" value="0"></div>
+          <div class="form-actions"><button class="button primary" type="submit">Salvar máquina</button></div>
+        </form>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><div><h3>Máquinas cadastradas</h3><p id="machineSummary">Frota vinculada ao módulo</p></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Frota</th><th>Modelo</th><th>Horímetro</th><th>Peças vinculadas</th></tr></thead><tbody id="machinesTable"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+  <div id="catalog-products" class="catalog-pane">
+    <div class="content-grid catalog-grid">
+      <div class="panel">
+        <div class="panel-title"><div><h3>Cadastrar produto / peça</h3><p>PN, medidas de fábrica e parâmetros de reposição</p></div></div>
+        <form id="productForm" class="compact-form">
+          <div class="form-grid"><div class="field"><label for="productCategory">Família *</label><select id="productCategory" required><option value="FPS">FPS — Ferramenta de penetração no solo</option><option value="MATERIAL_RODANTE">Material rodante</option><option value="OUTRO">Outro</option></select></div><div class="field"><label for="productPN">PN / Part Number *</label><input id="productPN" required placeholder="Ex.: PN-12345"></div></div>
+          <div class="field"><label for="productDescription">Descrição *</label><input id="productDescription" required placeholder="Ex.: Dente de caçamba / rolete inferior"></div>
+          <div class="field"><label for="productMachines">Máquinas compatíveis</label><select id="productMachines" multiple size="3" aria-describedby="machineLinkHelp"></select><small id="machineLinkHelp">Use Ctrl (Windows) para selecionar mais de uma máquina.</small></div>
+          <div class="form-grid"><div class="field"><label for="productNewMeasure">Medida nova (mm) *</label><input id="productNewMeasure" type="number" min="0.01" step="0.01" required placeholder="Padrão de fábrica"></div><div class="field"><label for="productDiscardMeasure">Limite de descarte (mm) *</label><input id="productDiscardMeasure" type="number" min="0" step="0.01" required placeholder="Trocar ao atingir"></div></div>
+          <div class="form-grid"><div class="field"><label for="productStock">Estoque atual (un.)</label><input id="productStock" type="number" min="0" step="1" value="0"></div><div class="field"><label for="productMonthlyUse">Consumo médio mensal</label><input id="productMonthlyUse" type="number" min="0" step="0.1" value="0"></div></div>
+          <div class="form-grid"><div class="field"><label for="productLeadTime">Prazo fornecedor (dias)</label><input id="productLeadTime" type="number" min="0" step="1" value="30"></div><div class="field"><label for="productSafetyDays">Segurança (dias)</label><input id="productSafetyDays" type="number" min="0" step="1" value="7"></div></div>
+          <div class="form-actions"><button class="button primary" type="submit">Salvar produto</button></div>
+        </form>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><div><h3>Catálogo de peças</h3><p>Filtre por PN, descrição ou família</p></div></div>
+        <div class="field"><label for="productSearch">Buscar peça</label><input id="productSearch" placeholder="Digite PN ou descrição"></div>
+        <div class="table-wrap"><table><thead><tr><th>PN / descrição</th><th>Família</th><th>Medidas (nova / descarte)</th><th>Estoque</th><th>Máquinas</th></tr></thead><tbody id="productsTable"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+  <div id="catalog-orders" class="catalog-pane">
+    <div class="panel"><div class="panel-title"><div><h3>Pedidos de compra gerados</h3><p>Pedidos demonstrativos da sessão atual — conferir antes de enviar ao fornecedor.</p></div></div><div class="table-wrap"><table><thead><tr><th>Nº pedido</th><th>Data</th><th>PN / produto</th><th>Máquina</th><th>Quantidade</th><th>Motivo</th><th>Status</th></tr></thead><tbody id="ordersTable"></tbody></table></div></div>
+  </div>
+</section>
