@@ -15,7 +15,7 @@
    if(!response.ok) throw new Error('Falha ao carregar a aba '+name);
    return response.text();
   }));
-  container.innerHTML=fragments.join('\n');
+  container.innerHTML=fragments.join('');
   const script=document.createElement('script');
   script.src='/assets/js/app.js';
   document.body.appendChild(script);
