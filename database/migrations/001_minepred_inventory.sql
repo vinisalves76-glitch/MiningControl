@@ -34,7 +34,7 @@ CREATE TABLE products (
 CREATE TABLE machine_products (
   machine_id UUID NOT NULL REFERENCES machines(id) ON DELETE CASCADE,
   product_id UUID NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
-  position_code VARCHAR(80),
+  position_code VARCHAR(80) NOT NULL DEFAULT 'GERAL',
   quantity_per_machine NUMERIC(10,2) NOT NULL DEFAULT 1 CHECK (quantity_per_machine > 0),
   notes TEXT,
   PRIMARY KEY (machine_id, product_id, position_code)
