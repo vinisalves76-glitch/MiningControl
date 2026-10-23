@@ -29,3 +29,12 @@ O trabalho deve ocorrer em branches. Não integrar alterações à `main` nem pu
 ## Limitações conhecidas do protótipo
 
 Os registros e parâmetros ficam apenas na memória da sessão do navegador; não há persistência em banco de dados nem autenticação. Os dados iniciais são demonstrativos. Limites técnicos e cálculos devem ser validados com os manuais aplicáveis e pela equipe responsável antes de qualquer uso operacional.
+
+## Módulo de cadastro e material rodante
+
+- `pages/catalog/view.html`: cadastro de máquinas, catálogo de produtos/peças e pedidos demonstrativos.
+- `pages/undercarriage/view.html`: inspeção de material rodante e previsão estimada.
+- `assets/js/catalog.js`: interações de cadastro, cálculo inicial de desgaste, ponto de pedido e rascunho de compra.
+- `database/migrations/001_minepred_inventory.sql`: proposta de schema relacional PostgreSQL (não aplicada a banco real).
+
+O módulo é um protótipo de interface. Os cadastros e pedidos ainda não persistem após recarregar a página. A emissão de pedidos é apenas um rascunho local, sem integração com compras ou fornecedor.
