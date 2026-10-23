@@ -82,3 +82,21 @@ Os fragmentos preservam os IDs usados pelo JavaScript atual. Se renomear um ID, 
 ## 8. Instrução para uma nova conversa de IA
 
 Comece lendo este arquivo, o `README.md`, `index.html`, `assets/js/app.js`, `assets/css/app.css` e os arquivos da aba que será alterada. Resuma a arquitetura e as limitações antes de editar. Preserve o comportamento existente, trabalhe numa branch, gere uma preview verificável e aguarde autorização antes de integrar em produção.
+
+ 
+## 9. Novo módulo — máquinas, produtos e material rodante
+
+### Arquivos adicionados
+- `pages/catalog/view.html`: cadastro de máquinas, produtos/peças e listagem de pedidos de compra.
+- `pages/undercarriage/view.html`: formulário de inspeção de material rodante, cálculo de desgaste e resumo de reposição.
+- `assets/js/catalog.js`: lógica de interface para cadastro, vínculos máquina-peça, inspeções, ponto de pedido e rascunho de pedido.
+- `database/migrations/001_minepred_inventory.sql`: proposta de schema PostgreSQL com máquinas, produtos, vínculo muitos-para-muitos, fornecedores, inspeções, medições, estoque, movimentos e pedidos.
+
+### Modelo de dados proposto
+`machines` e `products` são cadastros independentes. `machine_products` representa a compatibilidade e posição da peça em cada máquina. `inspections` identifica a inspeção/horímetro e `inspection_measurements` guarda uma medição por componente. Estoque é separado em saldo e movimentos; pedido de compra tem cabeçalho e itens.
+
+### Estado e limites
+A interface é demonstrativa e mantém cadastros, inspeções e pedidos em memória. Não existe API nem banco conectado. O SQL é um rascunho para revisão, não foi aplicado. Os valores de demonstração não são dados reais de máquinas. A previsão de vida útil só é calculada quando há inspeções anteriores comparáveis, com horímetro crescente e medida decrescente. Pedidos gerados na interface são rascunhos e não são enviados automaticamente.
+
+### Regras de segurança
+Antes de integrar: validar o schema e a chave de posição da relação máquina-peça; implementar API e autenticação; guardar histórico de medidas de referência por revisão; aprovar regras de criticidade, consumo, estoque de segurança e arredondamento com o responsável técnico/compras; incluir fluxo de aprovação antes de enviar pedidos.
