@@ -44,10 +44,12 @@
         <div class="panel-title"><div><h3>Catálogo de peças</h3><p>Filtre por PN, descrição ou família</p></div></div>
         <div class="field"><label for="productSearch">Buscar peça</label><input id="productSearch" placeholder="Digite PN ou descrição"></div>
         <div class="table-wrap"><table><thead><tr><th>PN / descrição</th><th>Família</th><th>Medidas (nova / descarte)</th><th>Estoque</th><th>Máquinas</th></tr></thead><tbody id="productsTable"></tbody></table></div>
+        <div class="panel-subhead"><h3>Previsão de reposição</h3><p>Cálculo orientativo com consumo mensal, prazo do fornecedor e estoque de segurança. Confirme as quantidades antes de comprar.</p></div>
+        <div class="table-wrap"><table><thead><tr><th>PN / produto</th><th>Família</th><th>Estoque atual</th><th>Ponto de pedido</th><th>Cobertura estimada</th><th>Status</th><th>Sugestão de compra</th></tr></thead><tbody id="stockForecastTable"><tr><td colspan="7" class="empty">Calculando estoque...</td></tr></tbody></table></div>
       </div>
     </div>
   </div>
   <div id="catalog-orders" class="catalog-pane">
-    <div class="panel"><div class="panel-title"><div><h3>Pedidos de compra gerados</h3><p>Pedidos demonstrativos da sessão atual — conferir antes de enviar ao fornecedor.</p></div></div><div class="table-wrap"><table><thead><tr><th>Nº pedido</th><th>Data</th><th>PN / produto</th><th>Máquina</th><th>Quantidade</th><th>Motivo</th><th>Status</th></tr></thead><tbody id="ordersTable"></tbody></table></div></div>
+    <div class="panel"><div class="panel-title"><div><h3>Pedidos de compra gerados</h3><p>Pedidos rascunho salvos neste navegador — conferir antes de enviar ao fornecedor.</p></div></div><div class="table-wrap"><table><thead><tr><th>Nº pedido</th><th>Data</th><th>PN / produto</th><th>Máquina</th><th>Quantidade</th><th>Motivo</th><th>Status</th></tr></thead><tbody id="ordersTable"></tbody></table></div></div>
   </div>
 </section>
