@@ -52,20 +52,20 @@
   $('ucMachine').value=machineId||'';
   const selectedMachine=machines.find(x=>x.id===machineId);
   if($('ucModel'))$('ucModel').value=selectedMachine?.model||'Modelo não informado no cadastro';
-  const compatible=products.filter(p=>p.category==='MATERIAL_RODANTE'&&(!machineId||p.machines.includes(machineId)));
-  $('ucComponentsBody').innerHTML=compatible.length?compatible.map(p=>'<tr data-product-id="'+esc(p.id)+'"><td><b>'+esc(p.description)+'</b><small>'+esc(p.pn)+'</small></td><td>'+p.newMeasure+' mm</td><td>'+p.discardMeasure+' mm</td><td><input aria-label="Medida encontrada '+esc(p.description)+'" id="ucMeasure_'+esc(p.id)+'" type="number" min="0" step="0.01" placeholder="Medida (mm)"></td><td><select aria-label="Condição visual '+esc(p.description)+'" id="ucCondition_'+esc(p.id)+'"><option>Normal</option><option>Desgaste irregular</option><option>Trinca / dano</option><option>Folga / componente solto</option><option>Substituição recomendada</option></select></td><td id="ucLife_'+esc(p.id)+'">—</td></tr>').join(''):'<tr><td colspan="6" class="empty">Não há componentes de material rodante vinculados a esta máquina. Cadastre ou vincule os PN na aba Máquinas e peças.</td></tr>';
+  const compatible=products.filter(p=>!machineId||p.machines.includes(machineId));
+  $('ucComponentsBody').innerHTML=compatible.length?compatible.map(p=>{const last=inspections.filter(i=>i.machineId===machineId&&i.productId===p.id).sort((a,b)=>b.hours-a.hours)[0];const lastLife=last&&Number.isFinite(+last.life)?Math.round(+last.life)+'% <small>última medição</small>':'Sem medição anterior';return '<tr data-product-id="'+esc(p.id)+'"><td><b>'+esc(p.description)+'</b><small>'+esc(p.category==='MATERIAL_RODANTE'?'Material rodante':'FPS')+' · '+esc(p.pn)+'</small></td><td>'+p.newMeasure+' mm</td><td>'+p.discardMeasure+' mm</td><td><input aria-label="Medida encontrada '+esc(p.description)+'" id="ucMeasure_'+esc(p.id)+'" type="number" min="0" step="0.01" placeholder="Medida (mm)"></td><td><select aria-label="Condição visual '+esc(p.description)+'" id="ucCondition_'+esc(p.id)+'"><option>Normal</option><option>Desgaste irregular</option><option>Trinca / dano</option><option>Folga / componente solto</option><option>Substituição recomendada</option></select></td><td id="ucLife_'+esc(p.id)+'">'+lastLife+'</td></tr>';}).join(''):'<tr><td colspan="6" class="empty">Nenhum componente cadastrado está vinculado a esta máquina. Cadastre as peças e vincule-as à máquina na aba Máquinas e peças.</td></tr>';
   if(!$('ucDate').value)$('ucDate').value=new Date().toISOString().slice(0,10);
   updateUndercarriageCalc();
  }
  function updateUndercarriageCalc(){
   const machineId=$('ucMachine').value,m=machines.find(x=>x.id===machineId);
   let filled=0,attention=0,criticalProduct=null,forecastCount=0,stockAlert=false;
-  const compatible=products.filter(p=>p.category==='MATERIAL_RODANTE'&&(!machineId||p.machines.includes(machineId)));
+  const compatible=products.filter(p=>!machineId||p.machines.includes(machineId));
   compatible.forEach(p=>{
    const input=$('ucMeasure_'+p.id),condition=$('ucCondition_'+p.id),cell=$('ucLife_'+p.id);
    if(!input||!cell)return;
    const raw=input.value,current=+raw,calc=raw!==''?lifeCalc(p,current):null;
-   cell.textContent=calc?Math.round(calc.life)+'%':'—';
+   if(calc){cell.textContent=Math.round(calc.life)+'% de vida restante';cell.style.fontWeight='700';cell.style.color=calc.life<=10?'#b42318':calc.life<=25?'#b54708':'#16794b';}else{const last=inspections.filter(i=>i.machineId===machineId&&i.productId===p.id).sort((a,b)=>b.hours-a.hours)[0];cell.textContent=last&&Number.isFinite(+last.life)?Math.round(+last.life)+'% (última medição)':'Sem medição';cell.style.fontWeight='600';cell.style.color='';}
    const previous=inspections.filter(i=>i.machineId===m?.id&&i.productId===p.id).sort((a,b)=>b.hours-a.hours)[0];
    if(calc){filled++;const isCritical=calc.life<=10||/trinca|solto|substituição/i.test(condition?.value||'');if(isCritical||calc.life<=25){attention++;if(!criticalProduct)criticalProduct=p;}
     if(previous&&+$('ucHours').value>previous.hours&&previous.current>current){const rate=(previous.current-current)/(+$('ucHours').value-previous.hours);if(rate>0)forecastCount++;}
@@ -105,7 +105,7 @@
  $('undercarriageForm').addEventListener('submit',e=>{
   e.preventDefault();const m=machines.find(x=>x.id===$('ucMachine').value),hours=+$('ucHours').value,date=$('ucDate').value;
   if(!m){notifyLocal('Selecione uma máquina.');return;}
-  const compatible=products.filter(p=>p.category==='MATERIAL_RODANTE'&&p.machines.includes(m.id));
+  const compatible=products.filter(p=>p.machines.includes(m.id));
   const measured=compatible.filter(p=>$('ucMeasure_'+p.id)&&$('ucMeasure_'+p.id).value!=='');
   if(!measured.length){notifyLocal('Informe pelo menos uma medida antes de salvar a inspeção.');return;}
   if(!date||!Number.isFinite(hours)||hours<0){notifyLocal('Informe data e horímetro válidos.');return;}
