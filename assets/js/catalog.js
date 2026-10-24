@@ -1,15 +1,15 @@
-/* MinePred — cadastro, inspeção de material rodante e pedidos demonstrativos.
-   Dados mantidos apenas na memória desta aba/sessão até a implementação do backend. */
+/* MinePred — cadastro, inspeção FPS/material rodante e previsão de reposição.
+   Protótipo: persistência local no navegador; ainda não sincroniza entre usuários/dispositivos. */
 (function(){
  const $=id=>document.getElementById(id);
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const fmtDate=s=>s?new Date(s+'T12:00:00').toLocaleDateString('pt-BR'):'—';
- const machines=[
+ let machines=[
   {id:'m1',code:'EX-04',name:'Escavadeira hidráulica',model:'SANY SY750H',serial:'DEMO-750-04',hours:6840},
   {id:'m2',code:'EX-02',name:'Escavadeira hidráulica',model:'SANY SY500H',serial:'DEMO-500-02',hours:5120},
   {id:'m3',code:'CL-01',name:'Carregadeira',model:'SANY SW956K',serial:'DEMO-956-01',hours:3910}
  ];
- const products=[
+ let products=[
   {id:'p1',category:'FPS',pn:'FPS-120',description:'Dente de caçamba',newMeasure:120,discardMeasure:60,stock:8,monthlyUse:14,leadTime:21,safetyDays:7,machines:['m1']},
   {id:'p2',category:'MATERIAL_RODANTE',pn:'MR-ROLETE-01',description:'Rolete inferior',newMeasure:100,discardMeasure:82,stock:3,monthlyUse:2,leadTime:35,safetyDays:10,machines:['m1','m2']},
   {id:'p3',category:'MATERIAL_RODANTE',pn:'MR-RODA-02',description:'Roda motriz',newMeasure:32,discardMeasure:24,stock:1,monthlyUse:1,leadTime:40,safetyDays:10,machines:['m2']},
@@ -22,6 +22,20 @@
  let orders=[];
  let activeCatalog='machines';
  let pendingOrder=null;
+ const STORAGE_KEY='minepred-inspecao-v1';
+ function persistData(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify({machines,products,inspections,orders}));}
+  catch(error){console.warn('Não foi possível salvar os dados localmente.',error);}
+ }
+ function restoreData(){
+  try{
+   const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
+   if(saved&&Array.isArray(saved.machines)&&Array.isArray(saved.products)&&Array.isArray(saved.inspections)&&Array.isArray(saved.orders)){
+    machines=saved.machines;products=saved.products;inspections=saved.inspections;orders=saved.orders;
+   }
+  }catch(error){console.warn('Dados locais inválidos; usando demonstração inicial.',error);}
+ }
+ restoreData();
  function notifyLocal(message){if(typeof window.notify==='function')window.notify(message);else alert(message);}
  function machineName(id){const m=machines.find(x=>x.id===id);return m?m.code+' · '+m.model:m?.code||'—';}
  function productLabel(p){return p.pn+' · '+p.description;}
@@ -40,6 +54,13 @@
   $('productsTable').innerHTML=filtered.length?filtered.map(p=>'<tr><td><b>'+esc(p.pn)+'</b><small>'+esc(p.description)+'</small></td><td>'+esc(p.category==='MATERIAL_RODANTE'?'Material rodante':p.category)+'</td><td>'+p.newMeasure+' / '+p.discardMeasure+' mm</td><td>'+p.stock+' un.</td><td>'+p.machines.map(machineName).map(esc).join(', ')+'</td></tr>').join(''):'<tr><td colspan="5" class="empty">Nenhum produto encontrado.</td></tr>';
   $('orderCount').textContent=orders.length;
   $('ordersTable').innerHTML=orders.length?orders.map(o=>'<tr><td><b>'+esc(o.number)+'</b></td><td>'+fmtDate(o.date)+'</td><td><b>'+esc(o.pn)+'</b><small>'+esc(o.description)+'</small></td><td>'+esc(o.machine)+'</td><td>'+o.quantity+' un.</td><td>'+esc(o.reason)+'</td><td><span class="tag orange">Rascunho</span></td></tr>').join(''):'<tr><td colspan="7" class="empty">Nenhum pedido gerado nesta sessão.</td></tr>';
+  const stockTable=$('stockForecastTable');
+  if(stockTable){
+   stockTable.innerHTML=products.length?products.map(p=>{
+    const point=reorderPoint(p),daily=(+p.monthlyUse||0)/30,daysCover=daily>0?Math.floor((+p.stock||0)/daily):null,low=(+p.stock||0)<=point,qty=recommendedQty(p);
+    return '<tr><td><b>'+esc(p.pn)+'</b><small>'+esc(p.description)+'</small></td><td>'+esc(p.category==='MATERIAL_RODANTE'?'Material rodante':p.category==='FPS'?'FPS':'Outro')+'</td><td>'+Number(p.stock||0).toLocaleString('pt-BR')+' un.</td><td>'+point+' un.</td><td>'+(daysCover===null?'Sem consumo definido':daysCover+' dias')+'</td><td><span class="tag '+(low?'red':'')+'">'+(low?'Repor':'Regular')+'</span></td><td><b>'+qty+' un.</b></td></tr>';
+   }).join(''):'<tr><td colspan="7" class="empty">Cadastre produtos para calcular a reposição.</td></tr>';
+  }
   renderUndercarriageHistory();
  }
  function renderUndercarriageHistory(){
@@ -87,14 +108,14 @@
   e.preventDefault();const code=$('machineCode').value.trim().toUpperCase();
   if(machines.some(m=>m.code.toLowerCase()===code.toLowerCase())){notifyLocal('Já existe uma máquina com esse código.');return;}
   machines.push({id:'m'+Date.now(),code,name:$('machineName').value.trim(),model:$('machineModel').value.trim(),serial:$('machineSerial').value.trim(),hours:+$('machineHours').value||0});
-  $('machineForm').reset();renderCatalog();notifyLocal('Máquina cadastrada nesta sessão.');
+  persistData();$('machineForm').reset();renderCatalog();notifyLocal('Máquina cadastrada nesta sessão.');
  });
  $('productForm').addEventListener('submit',e=>{
   e.preventDefault();const pn=$('productPN').value.trim().toUpperCase(),newMeasure=+$('productNewMeasure').value,discardMeasure=+$('productDiscardMeasure').value;
   if(products.some(p=>p.pn.toLowerCase()===pn.toLowerCase())){notifyLocal('Já existe um produto com esse PN.');return;}
   if(newMeasure<=discardMeasure){notifyLocal('A medida nova deve ser maior que o limite de descarte.');return;}
   products.push({id:'p'+Date.now(),category:$('productCategory').value,pn,description:$('productDescription').value.trim(),newMeasure,discardMeasure,stock:+$('productStock').value||0,monthlyUse:+$('productMonthlyUse').value||0,leadTime:+$('productLeadTime').value||0,safetyDays:+$('productSafetyDays').value||0,machines:Array.from($('productMachines').selectedOptions).map(o=>o.value)});
-  $('productForm').reset();$('productStock').value='0';$('productMonthlyUse').value='0';$('productLeadTime').value='30';$('productSafetyDays').value='7';renderCatalog();notifyLocal('Produto cadastrado nesta sessão.');
+  persistData();$('productForm').reset();$('productStock').value='0';$('productMonthlyUse').value='0';$('productLeadTime').value='30';$('productSafetyDays').value='7';renderCatalog();notifyLocal('Produto cadastrado nesta sessão.');
  });
  $('productSearch').addEventListener('input',renderCatalog);
  $('ucMachine').addEventListener('change',prepareUndercarriage);
@@ -113,13 +134,13 @@
   if(invalid){notifyLocal('Confira a medida do componente '+invalid.pn+'.');return;}
   if(measured.some(p=>inspections.some(i=>i.machineId===m.id&&i.productId===p.id&&hours<i.hours))){notifyLocal('O horímetro informado é menor que uma inspeção anterior de um dos componentes. Confira o valor.');return;}
   measured.forEach(p=>{const current=+$('ucMeasure_'+p.id).value,calc=lifeCalc(p,current);inspections.unshift({id:'i'+Date.now()+'-'+p.id,date,machineId:m.id,productId:p.id,hours,current,life:calc.life,wear:calc.wear,condition:$('ucCondition_'+p.id).value,notes:$('ucNotes').value,inspectionGroup:date+'-'+m.id+'-'+hours});});
-  m.hours=Math.max(m.hours,hours);renderUndercarriageHistory();updateUndercarriageCalc();notifyLocal('Inspeção completa salva: '+measured.length+' componente(s) registrados juntos nesta sessão.');
+  m.hours=Math.max(m.hours,hours);persistData();renderCatalog();prepareUndercarriage();renderUndercarriageHistory();updateUndercarriageCalc();notifyLocal('Inspeção salva neste navegador: '+measured.length+' componente(s). Os itens não medidos foram preservados sem novo registro.');
  });
  $('ucGenerateOrder').addEventListener('click',()=>{
   if(!pendingOrder)return;const p=products.find(x=>x.id===pendingOrder.productId);if(!p)return;
   const qty=recommendedQty(p);
   orders.unshift({number:'PC-'+String(Date.now()).slice(-6),date:new Date().toISOString().slice(0,10),productId:p.id,pn:p.pn,description:p.description,machine:machineName(pendingOrder.machineId),quantity:Math.max(1,qty),reason:pendingOrder.reason});
-  setCatalogTab('orders');renderCatalog();notifyLocal('Pedido criado como rascunho nesta sessão. Revise antes de enviar ao setor de compras.');
+  persistData();setCatalogTab('orders');renderCatalog();notifyLocal('Pedido criado como rascunho nesta sessão. Revise antes de enviar ao setor de compras.');
  });
  window.renderCatalog=renderCatalog;window.prepareUndercarriage=prepareUndercarriage;
  renderCatalog();prepareUndercarriage();
