@@ -14,10 +14,10 @@
           <div class="field"><label for="ucDate">Data da inspeção *</label><input id="ucDate" type="date" required></div>
           <div class="field"><label for="ucHours">Horímetro atual (h) *</label><input id="ucHours" type="number" min="0" step="0.1" required placeholder="Horímetro atual"></div>
         </div>
-        <div class="panel-subhead"><h3>Componentes do conjunto</h3><p>Preencha as medições de todos os componentes inspecionados e salve uma única inspeção para a máquina.</p></div>
+        <div class="panel-subhead"><h3>Todos os componentes cadastrados da máquina</h3><p>FPS e material rodante aparecem automaticamente. Preencha somente as peças medidas nesta visita; a vida útil anterior continua visível para consulta.</p></div>
         <div class="table-wrap">
           <table class="uc-components-table">
-            <thead><tr><th>Componente / PN</th><th>Referência de cadastro (mm)</th><th>Limite de descarte cadastrado (mm)</th><th>Medida encontrada (mm) *</th><th>Condição visual</th><th>Vida restante</th></tr></thead>
+            <thead><tr><th>Grupo / componente / PN</th><th>Medida nova (mm)</th><th>Limite de descarte (mm)</th><th>Medida encontrada (mm)</th><th>Condição visual</th><th>Vida útil restante</th></tr></thead>
             <tbody id="ucComponentsBody"><tr><td colspan="6" class="empty">Selecione uma máquina para carregar os componentes vinculados.</td></tr></tbody>
           </table>
         </div>
