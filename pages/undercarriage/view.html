@@ -28,12 +28,12 @@
           <div><small>Itens em atenção/críticos</small><strong id="ucWear">0</strong></div>
           <div><small>Previsão de reposição</small><strong id="ucForecast">—</strong></div>
         </div>
-        <div class="form-actions"><button class="button primary" type="submit">Salvar inspeção completa →</button><button class="button light" type="button" id="ucClearMeasures">Limpar medições</button><button class="button light" id="ucGenerateOrder" type="button" hidden>Gerar pedido de compra</button></div>
-        <small id="ucOrderReason" class="help-text">Os alertas são estimativas; valide os limites pelo manual específico da máquina e do componente.</small>
+        <div class="form-actions"><button class="button primary" type="submit">Salvar inspeção →</button><button class="button light" type="button" id="ucClearMeasures">Limpar medições</button><button class="button light" id="ucGenerateOrder" type="button" hidden>Gerar pedido de compra</button></div>
+        <small id="ucOrderReason" class="help-text">Os registros ficam salvos neste navegador. Ainda não há sincronização com outros dispositivos; valide limites pelo manual específico.</small>
       </form>
     </div>
     <div class="panel">
-      <div class="panel-title"><div><h3>Últimas inspeções</h3><p>Histórico local desta sessão</p></div></div>
+      <div class="panel-title"><div><h3>Últimas inspeções</h3><p>Histórico salvo neste navegador</p></div></div>
       <div class="table-wrap"><table><thead><tr><th>Data</th><th>Máquina / componente</th><th>Medida</th><th>Vida restante</th><th>Horímetro</th></tr></thead><tbody id="ucHistoryTable"></tbody></table></div>
       <div class="panel-subhead"><h3>Reposição recomendada</h3><p id="ucStockAdvice">Selecione um componente para consultar o ponto de pedido.</p></div>
       <div class="stock-quick-grid"><div><small>Estoque atual</small><strong id="ucStock">—</strong></div><div><small>Ponto de pedido</small><strong id="ucReorder">—</strong></div><div><small>Prazo fornecedor</small><strong id="ucLead">—</strong></div></div>
