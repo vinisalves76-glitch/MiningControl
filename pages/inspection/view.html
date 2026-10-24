@@ -1,1 +1,63 @@
-<section id="inspection" class="page"><div class="panel"><div class="panel-title"><div><h3>Registrar inspeção de FPS</h3><p>Preencha as medidas de campo e os parâmetros de referência do fabricante</p></div><span class="tag">NOVO REGISTRO</span></div><form id="inspectionForm"><div class="section-label">01 · Identificação</div><div class="form-grid"><div class="field"><label for="machine">Máquina / frota *</label><input id="machine" required placeholder="Ex.: Escavadeira EX-04" value="Escavadeira EX-04"></div><div class="field"><label for="model">Modelo da máquina</label><input id="model" placeholder="Ex.: SANY SY750H"></div><div class="field"><label for="fpsType">Tipo de FPS *</label><select id="fpsType" required><option>Dente de caçamba</option><option>Adaptador</option><option>Lâmina / canto</option><option>Unha de escarificador</option><option>Outro</option></select></div><div class="field"><label for="partCode">Código / part number</label><input id="partCode" placeholder="Código da peça"></div><div class="field"><label for="hours">Horímetro atual (h) *</label><input id="hours" type="number" min="0" step="0.1" required value="6840"></div><div class="field"><label for="inspectDate">Data da inspeção *</label><input id="inspectDate" type="date" required></div></div><div class="section-label">02 · Medição dimensional (mm)</div><div class="form-grid"><div class="field"><label for="newMeasure">Medida de referência / novo (mm) *</label><input id="newMeasure" type="number" min="0.01" step="0.01" value="120" required></div><div class="field"><label for="currentMeasure">Medida encontrada (mm) *</label><input id="currentMeasure" type="number" min="0" step="0.01" value="88" required></div><div class="field"><label for="discardMeasure">Limite de descarte (mm) *</label><input id="discardMeasure" type="number" min="0" step="0.01" value="60" required></div><div class="field"><label for="previousMeasure">Medida na inspeção anterior (mm)</label><input id="previousMeasure" type="number" min="0" step="0.01" placeholder="Opcional"></div><div class="field"><label for="previousHours">Horímetro anterior (h)</label><input id="previousHours" type="number" min="0" step="0.1" placeholder="Opcional"></div><div class="field"><label for="condition">Condição visual</label><select id="condition"><option>Normal</option><option>Desgaste irregular</option><option>Trinca / dano</option><option>Solto / fixação comprometida</option><option>Substituição imediata recomendada</option></select></div><div class="field full"><label for="notes">Observações do inspetor</label><textarea id="notes" rows="2" placeholder="Local do desgaste, anomalias, recomendação..."></textarea></div></div><div class="notice"><b>Importante:</b> a fórmula de vida útil usa a faixa dimensional entre a medida de referência e o limite de descarte. Confirme se essa medida é aplicável ao componente inspecionado. Trincas, folgas ou danos estruturais exigem avaliação técnica independentemente do percentual calculado.</div><div id="calcResults" class="result-grid"><div class="result"><small>Vida útil dimensional estimada</small><strong id="lifeResult">53%</strong><p>Faixa de desgaste ainda disponível</p></div><div class="result"><small>Desgaste consumido</small><strong id="wearResult">47%</strong><p>Da faixa dimensional utilizável</p></div><div class="result"><small>Vida restante estimada</small><strong id="hoursResult">—</strong><p>Calculada quando há histórico de desgaste</p></div></div><div class="form-actions"><button type="button" class="button light" onclick="resetInspection()">Limpar formulário</button><button type="button" class="button dark" onclick="calculateLife()">↻ Calcular vida útil</button><button type="submit" class="button primary">Salvar inspeção →</button></div></form></div></section>
+<section id="inspection" class="page">
+<style>
+#inspection .inspection-hero{background:linear-gradient(125deg,#163c35,#28594b);color:#fff;border-radius:18px;padding:24px 26px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+#inspection .inspection-hero .eyebrow{color:#b7d1c5}#inspection .inspection-hero h2{font-size:25px;margin:7px 0}#inspection .inspection-hero p{color:#d4e4dc;font-size:13px;margin:0;max-width:650px;line-height:1.5}
+#inspection .inspection-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(250px,.8fr);gap:16px;align-items:start}
+#inspection .inspection-card{background:light-dark(#fff,#19221e);border:1px solid light-dark(#e0e7e2,#2b3831);border-radius:15px;padding:20px;margin-bottom:16px}
+#inspection .step-heading{display:flex;align-items:center;gap:10px;margin:3px 0 16px;padding-bottom:11px;border-bottom:1px solid #e5ebe6}
+#inspection .step-number{width:30px;height:30px;border-radius:9px;background:#e8f1eb;color:#245440;display:grid;place-items:center;font-weight:900;font-size:12px;flex-shrink:0}
+#inspection .step-heading h3{font-size:14px;margin:0}#inspection .step-heading p{font-size:11px;color:#7b8b82;margin:4px 0 0}
+#inspection .measurement-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+#inspection .measurement-focus{background:#f0f6f1;border:1px solid #dbe9df;border-radius:12px;padding:14px;margin-bottom:15px}
+#inspection .measurement-focus label{font-size:11px;font-weight:800;color:#385e49;display:block;margin-bottom:8px}
+#inspection .measurement-focus input{width:100%;border:1px solid #c9ddcf;background:white;color:#20352b;border-radius:9px;padding:13px;font:700 20px var(--site-font-body)}
+#inspection .side-metric{padding:15px;border:1px solid #e0e7e2;border-radius:12px;margin-top:10px}
+#inspection .side-metric small{font-size:11px;color:#71847a}#inspection .side-metric strong{display:block;font-size:28px;margin:6px 0 3px;letter-spacing:-.5px}
+#inspection .inspection-checklist{display:grid;gap:10px;margin-top:12px}
+#inspection .check-item{display:flex;gap:9px;align-items:flex-start;font-size:12px;line-height:1.45;color:#52685c}
+#inspection .check-dot{width:20px;height:20px;flex-shrink:0;border-radius:50%;background:#e8f1eb;color:#2c694b;display:grid;place-items:center;font-size:11px;font-weight:900}
+#inspection .inspection-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;padding-top:5px}
+@media(max-width:950px){#inspection .inspection-layout{grid-template-columns:1fr}#inspection .measurement-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){#inspection .measurement-grid{grid-template-columns:1fr}#inspection .inspection-hero{padding:18px;align-items:flex-start;flex-direction:column}#inspection .inspection-card{padding:15px}}
+</style>
+<div class="inspection-hero"><div><div class="eyebrow">ROTINA DE CAMPO · FPS</div><h2>Inspeção dimensional e condição</h2><p>Identifique a máquina, registre as medidas reais e avalie a condição do componente. Use sempre os limites definidos no manual específico.</p></div><span class="tag" style="background:#d8e9df;color:#204b39">● NOVA INSPEÇÃO</span></div>
+<div class="inspection-layout">
+<div>
+<form id="inspectionForm">
+<div class="inspection-card">
+<div class="step-heading"><span class="step-number">01</span><div><h3>Identificação do conjunto</h3><p>Vincule a medição à máquina e à peça correta</p></div></div>
+<div class="form-grid">
+<div class="field"><label for="machine">Máquina / frota *</label><input id="machine" required placeholder="Ex.: Escavadeira EX-04" value="Escavadeira EX-04"></div>
+<div class="field"><label for="model">Modelo da máquina</label><input id="model" placeholder="Ex.: SANY SY750H"></div>
+<div class="field"><label for="fpsType">Tipo de FPS *</label><select id="fpsType" required><option>Dente de caçamba</option><option>Adaptador</option><option>Lâmina / canto</option><option>Unha de escarificador</option><option>Outro</option></select></div>
+<div class="field"><label for="partCode">Código / part number</label><input id="partCode" placeholder="Informe o código da peça"></div>
+<div class="field"><label for="hours">Horímetro atual (h) *</label><input id="hours" type="number" min="0" step="0.1" required value="6840"></div>
+<div class="field"><label for="inspectDate">Data da inspeção *</label><input id="inspectDate" type="date" required></div>
+</div></div>
+<div class="inspection-card">
+<div class="step-heading"><span class="step-number">02</span><div><h3>Medição dimensional</h3><p>Informe valores em milímetros (mm), sem estimar medidas</p></div></div>
+<div class="measurement-grid">
+<div class="measurement-focus"><label for="newMeasure">MEDIDA NOVA / REFERÊNCIA (mm) *</label><input id="newMeasure" type="number" min="0.01" step="0.01" value="120" required></div>
+<div class="measurement-focus"><label for="currentMeasure">MEDIDA ENCONTRADA (mm) *</label><input id="currentMeasure" type="number" min="0" step="0.01" value="88" required></div>
+<div class="measurement-focus"><label for="discardMeasure">LIMITE DE DESCARTE (mm) *</label><input id="discardMeasure" type="number" min="0" step="0.01" value="60" required></div>
+<div class="field"><label for="previousMeasure">Medida anterior (mm)</label><input id="previousMeasure" type="number" min="0" step="0.01" placeholder="Opcional"></div>
+<div class="field"><label for="previousHours">Horímetro anterior (h)</label><input id="previousHours" type="number" min="0" step="0.1" placeholder="Opcional"></div>
+<div class="field"><label for="condition">Condição visual</label><select id="condition"><option>Normal</option><option>Desgaste irregular</option><option>Trinca / dano</option><option>Solto / fixação comprometida</option><option>Substituição imediata recomendada</option></select></div>
+<div class="field full"><label for="notes">Observações do inspetor</label><textarea id="notes" rows="3" placeholder="Local do desgaste, anomalias, recomendação..."></textarea></div>
+</div>
+<div class="notice"><b>Segurança técnica:</b> confirme que a medida e o ponto de medição são aplicáveis ao componente inspecionado. Trincas, folgas ou danos estruturais exigem avaliação técnica, mesmo que o percentual calculado esteja normal.</div>
+</div>
+<div class="inspection-card">
+<div class="step-heading"><span class="step-number">03</span><div><h3>Resultado e registro</h3><p>Calcule antes de salvar a inspeção</p></div></div>
+<div id="calcResults" class="result-grid"><div class="result"><small>Vida útil dimensional estimada</small><strong id="lifeResult">53%</strong><p>Faixa dimensional restante</p></div><div class="result"><small>Desgaste consumido</small><strong id="wearResult">47%</strong><p>Da faixa utilizável</p></div><div class="result"><small>Vida restante estimada</small><strong id="hoursResult">—</strong><p>Exige histórico de desgaste</p></div></div>
+<div class="inspection-actions"><button type="button" class="button light" onclick="resetInspection()">Limpar formulário</button><button type="button" class="button dark" onclick="calculateLife()">↻ Calcular resultado</button><button type="submit" class="button primary">Salvar inspeção →</button></div>
+</div>
+</form>
+</div>
+<aside>
+<div class="inspection-card"><div class="panel-title"><div><h3>Checklist rápido</h3><p>Antes de concluir a inspeção</p></div><span class="tag orange">CAMPO</span></div>
+<div class="inspection-checklist"><div class="check-item"><span class="check-dot">1</span><span>Confirmar máquina, modelo e identificação da peça.</span></div><div class="check-item"><span class="check-dot">2</span><span>Limpar a região e conferir o ponto correto de medição.</span></div><div class="check-item"><span class="check-dot">3</span><span>Consultar no manual a medida nova e o limite de descarte.</span></div><div class="check-item"><span class="check-dot">4</span><span>Verificar trincas, folgas, fixação e desgaste irregular.</span></div><div class="check-item"><span class="check-dot">5</span><span>Registrar horímetro, medidas e observações antes de salvar.</span></div></div></div>
+<div class="inspection-card"><div class="panel-title"><div><h3>Leitura da medição</h3><p>Resultado atualizado pelos cálculos</p></div></div><div class="side-metric"><small>Vida útil dimensional restante</small><strong id="sideLife">—</strong><span class="tag" id="sideLifeStatus">AGUARDANDO</span></div><div class="side-metric"><small>Desgaste consumido</small><strong id="sideWear">—</strong></div><div class="notice"><b>Importante:</b> a projeção é estimativa matemática. Não substitui o critério de inspeção nem os limites do fabricante.</div></div>
+</aside>
+</div>
+</section>
